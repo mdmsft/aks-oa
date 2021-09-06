@@ -1,13 +1,17 @@
 targetScope = 'subscription'
 
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: 'biceptest'
+  name: 'rg-${uniqueString(subscription().id)}'
   location: deployment().location
 }
 
-module storage 'storage.bicep' = {
+module aks 'aks.bicep' = {
   scope: rg
-  name: '${deployment().name}-storage'
+  name: 'aks-${deployment().name}'
+  params: {
+    name: 'aks-${rg.name}'
+  }
 }
 
-output blobContianerNames array = storage.outputs.blobContainerNames
+output clusterName string = aks.outputs.name
+output resourceGroupName string = rg.name
