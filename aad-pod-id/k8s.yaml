@@ -1,0 +1,85 @@
+apiVersion: "aadpodidentity.k8s.io/v1"
+kind: AzureIdentity
+metadata:
+  name: <..>
+spec:
+  type: 0
+  resourceID: <..>
+  clientID: <..>
+---
+apiVersion: "aadpodidentity.k8s.io/v1"
+kind: AzureIdentityBinding
+metadata:
+  name: <..>-binding
+spec:
+  azureIdentity: <..>
+  selector: <..>
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secrets
+  labels:
+    name: secrets
+    aadpodidbinding: <..>
+spec:
+  containers:
+  - name: secrets
+    image: ghcr.io/mdmsft/secrets:1.0.2
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+    env:
+      - name: VAULT_URI
+        value: <..>
+    ports:
+      - containerPort: 80
+  nodeSelector:
+    kubernetes.io/os: linux
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: secrets
+spec:
+  type: LoadBalancer
+  selector:
+    name: secrets
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nosecrets
+  labels:
+    name: nosecrets
+spec:
+  containers:
+  - name: nosecrets
+    image: ghcr.io/mdmsft/secrets:1.0.2
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "250m"
+    env:
+      - name: VAULT_URI
+        value: <..>
+    ports:
+      - containerPort: 80
+  nodeSelector:
+    kubernetes.io/os: linux
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nosecrets
+spec:
+  type: LoadBalancer
+  selector:
+    name: nosecrets
+  ports:
+  - port: 80
+    targetPort: 80
